@@ -14,10 +14,14 @@ const CLIENT_ORIGINS = process.env.CLIENT_ORIGIN
   ? process.env.CLIENT_ORIGIN.split(",").map((origin) => origin.trim())
   : ["http://localhost:3000"];
 
+console.log("CORS Origins configured:", CLIENT_ORIGINS);
+
 app.use(
   cors({
     origin: CLIENT_ORIGINS,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Internal-Key"],
   })
 );
 app.use(express.json());
