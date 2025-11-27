@@ -10,15 +10,37 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const CLIENT_ORIGINS = process.env.CLIENT_ORIGIN
-  ? process.env.CLIENT_ORIGIN.split(",").map((origin) => origin.trim())
-  : ["http://localhost:3000"];
 
-console.log("CORS Origins configured:", CLIENT_ORIGINS);
+// Build allowed origins - hardcode production URLs as fallback
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://dishdelight-client.vercel.app",
+];
+
+// If CLIENT_ORIGIN is set, add it
+if (process.env.CLIENT_ORIGIN) {
+  const additionalOrigins = process.env.CLIENT_ORIGIN.split(",").map((origin) =>
+    origin.trim()
+  );
+  allowedOrigins.push(...additionalOrigins);
+}
+
+console.log("CORS Origins configured:", allowedOrigins);
+console.log("NODE_ENV:", process.env.NODE_ENV);
 
 app.use(
   cors({
-    origin: CLIENT_ORIGINS,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, curl requests, etc)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("CORS blocked origin:", origin);
+        callback(new Error("CORS not allowed for origin: " + origin));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Internal-Key"],
